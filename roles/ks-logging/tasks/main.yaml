@@ -1,0 +1,42 @@
+---
+- name: ks-logging | Getting logging installation files
+  copy:
+    src: "fluentbit-operator"
+    dest: "{{ kubesphere_dir }}/"
+
+
+- name: ks-logging | Checking fluent bit migrating
+  shell: >
+    {{ bin_dir }}/kubectl get outputs.logging.kubesphere.io -n kubesphere-logging-system es -o jsonpath='{.metadata.name}'
+  register: migrating_completed
+  failed_when: false
+
+
+- name: ks-logging | Creating manifests
+  template:
+    src: "{{ item.file }}.j2"
+    dest: "{{ kubesphere_dir }}/fluentbit-operator/{{ item.file }}"
+  with_items:
+    - { name: custom-output-elasticsearch-logging, file: custom-output-elasticsearch-logging.yaml }
+  when: migrating_completed.rc != 0 or migrating_completed.stdout.find("es") == -1
+
+
+- name: ks-logging | Apply fluentbit operator custom resources
+  shell: >
+    {{ bin_dir }}/kubectl apply -f {{ kubesphere_dir }}/fluentbit-operator
+
+
+- import_tasks: logsidecar.yaml
+  
+
+- name: ks-logging | import logging status
+  shell: >
+    {{ bin_dir }}/kubectl patch cc ks-installer
+    --type merge
+    -p '{"status": {"logging": {"status": "enabled", "enabledTime": "{{ lookup('pipe','date  +%Y-%m-%dT%H:%M:%S%Z') }}"}}}'
+    -n kubesphere-system
+  register: import
+  failed_when: "import.stderr and 'Warning' not in import.stderr"
+  until: import is succeeded
+  retries: 5
+  delay: 3

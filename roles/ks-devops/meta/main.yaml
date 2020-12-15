@@ -1,0 +1,8 @@
+---
+
+dependencies:
+  - role: ks-devops/s2i
+
+  - role: ks-devops/jenkins
+
+

@@ -1,0 +1,69 @@
+---
+
+- name: ks-events | getting ks-events installation files
+  copy:
+    src: "kube-events"
+    dest: "{{ kubesphere_dir }}/ks-events/"
+
+- name: ks-events | getting ks-events installation files
+  template:
+    src: "{{ item.file }}.j2"
+    dest: "{{ kubesphere_dir }}/{{ item.path }}/{{ item.file }}"
+  with_items:
+    - { path: ks-events, file: custom-values-events.yaml }
+
+
+- name: ks-events | check ks-events
+  shell: >
+    {{ bin_dir }}/helm list -f ks-events -n kubesphere-logging-system
+  register: events_check
+  failed_when: false
+
+
+- name: ks-events | deploy ks-events
+  shell: >
+    {{ bin_dir }}/helm upgrade --install ks-events
+    {{ kubesphere_dir }}/ks-events/kube-events
+    -f {{ kubesphere_dir }}/ks-events/custom-values-events.yaml
+    -n kubesphere-logging-system
+    --force
+  register: deploy_result
+  until: deploy_result is succeeded
+  retries: 3
+  delay: 10
+  when:
+    - (events_check.stdout.find("deployed") == -1) or (events_check.stdout.find("0.1.0") == -1)
+
+
+- import_tasks: fluentbit-operator.yaml
+
+
+- name: ks-events | import ks-events status
+  shell: >
+    {{ bin_dir }}/kubectl patch cc ks-installer
+    --type merge
+    -p '{"status": {"events": {"status": "enabled", "enabledTime": "{{ lookup('pipe','date  +%Y-%m-%dT%H:%M:%S%Z') }}"}}}'
+    -n kubesphere-system
+  register: import
+  failed_when: "import.stderr and 'Warning' not in import.stderr"
+  until: import is succeeded
+  retries: 5
+  delay: 3
+
+
+- name: ks-events | import ks-events status
+  shell: >
+    {{ bin_dir }}/kubectl patch cc ks-installer
+    --type merge
+    -p '{"status": {"events": {"ruler": {"status": "enabled", "enabledTime": "{{ lookup('pipe','date  +%Y-%m-%dT%H:%M:%S%Z') }}"}}}}'
+    -n kubesphere-system
+  register: import
+  failed_when: "import.stderr and 'Warning' not in import.stderr"
+  until: import is succeeded
+  retries: 5
+  delay: 3
+  when:
+    - events is defined 
+    - events.ruler is defined 
+    - events.ruler.enabled is defined
+    - events.ruler.enabled == True
