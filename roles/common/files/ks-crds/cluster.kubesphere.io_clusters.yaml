@@ -133,6 +133,13 @@ spec:
                 - type
                 type: object
               type: array
+            configz:
+              additionalProperties:
+                type: boolean
+              description: Configz is status of components enabled in the member cluster.
+                This is synchronized with member cluster every amount of time, like
+                5 minutes.
+              type: object
             kubernetesVersion:
               description: GitVersion of the kubernetes cluster, this field is populated
                 by cluster controller
