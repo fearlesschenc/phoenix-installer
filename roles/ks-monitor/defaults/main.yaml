@@ -47,7 +47,7 @@ monitoring:
       cpu: 20m
       memory: 30Mi 
   grafana:
-    enable: false
+    enable: true
 
 etcd.endpointIps: |-
   {% for item in groups['etcd'] -%}
