@@ -70,13 +70,13 @@ do
 done
 
 # delete validatingwebhookconfigurations
-for webhook in ks-events-admission-validate users.iam.kubesphere.io validating-webhook-configuration
+for webhook in ks-events-admission-validate users.iam.kubesphere.io validating-webhook-configuration istiod-istio-system
 do
   kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io $webhook --ignore-not-found
 done
 
 # delete mutatingwebhookconfigurations
-for webhook in ks-events-admission-mutate logsidecar-injector-admission-mutate mutating-webhook-configuration
+for webhook in ks-events-admission-mutate logsidecar-injector-admission-mutate mutating-webhook-configuration istio-sidecar-injector-1-6-10
 do
   kubectl delete mutatingwebhookconfigurations.admissionregistration.k8s.io $webhook --ignore-not-found
 done

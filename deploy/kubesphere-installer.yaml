@@ -233,7 +233,7 @@ spec:
       serviceAccountName: ks-installer
       containers:
       - name: installer
-        image: registry.cn-hangzhou.aliyuncs.com/fearlesschenc/containers/phoenix/ks-installer:latest
+        image: registry.cn-hangzhou.aliyuncs.com/fearlesschenc/containers/phoenix/ks-installer:v0.1.2
         imagePullPolicy: "Always"
         resources:
           limits:
