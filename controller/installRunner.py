@@ -186,7 +186,7 @@ def generateTaskLists():
 
 
 def getComponentLists():
-    readyToEnabledList = ['monitoring', 'multicluster']
+    readyToEnabledList = []
     readyToDisableList = []
     global configFile
 
